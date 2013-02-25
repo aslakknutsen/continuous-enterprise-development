@@ -1,0 +1,24 @@
+== Chapter Guide and Schedule
+
+[options="header"]
+|===================================
+|Chapter|Name|Due|Description
+|0|Prelude|Delivered|Welcome statement
+|1|Continuity|Delivered|Reasoning for testable development and general introduction to test theory
+|2|Enabling Technologies|Delivered|Meet the projects we'll be using throughout the book
+|3|Scratch to Production|Delivered|Kickstart of a new Java EE application from scratch into cloud deployment using JBoss technologies
+|4|JPA|18 March|Testing with persistent data and the http://arquillian.org/guides/testing_java_persistence/['Arquillian Persistence Extension']
+|5|UI|1 April|Using Warp, Graphene
+|6|Transactions|15 April|
+|7|Security|29 April|
+|8|_TBD_|13 May|
+|9|_TBD_|27 May|
+|10|Cloud|3 June|Arquillian OpenShift Container?
+|11|Spring|17 July|
+|11|BDD|1 July|
+|13|JRebel|15 July|
+|14|Arquillian SPI|29 July|Implementing an Arquillian Container or Extension
+2+|Rough Draft|12 August|Completed Manuscript
+2+|Final Draft|26 August|Final Edits for Completed Manuscript, 1 Month prior to launch
+2+|Publish|26 September|http://www.oracle.com/javaone/location/index.html['JavaOne'] Conference Start in San Francisco, CA
+|===================================
