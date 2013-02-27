@@ -12,13 +12,11 @@
 |6|Transactions|15 April|
 |7|Security|29 April|
 |8|NoSQL and Clustering|13 May|Infinispan, Manual Node Deployment, etc.
-|9|_TBD_|27 May|
-|10|Cloud|3 June|Arquillian OpenShift Container?
-|11|Spring|17 July|
-|11|BDD|1 July|
-|13|JRebel|15 July|
-|14|Arquillian SPI|29 July|Implementing an Arquillian Container or Extension
-2+|Rough Draft|12 August|Completed Manuscript
-2+|Final Draft|26 August|Final Edits for Completed Manuscript, 1 Month prior to launch
+|9|Cloud|27 May|Arquillian OpenShift Container?
+|10|Spring|3 June|
+|11|BDD|17 June|
+|12|JRebel|1 July|
+|13|Arquillian SPI|15 July|Implementing an Arquillian Container or Extension
+2+|Completed Draft|18 July|Completed Manuscript - Off to Production
 2+|Publish|26 September|http://www.oracle.com/javaone/location/index.html['JavaOne'] Conference Start in San Francisco, CA
 |===================================
