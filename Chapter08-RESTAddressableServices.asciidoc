@@ -1,0 +1,1070 @@
+== REST and Addressable Services
+
+_"Rest and be thankful." - Inscription at Rest Stop Along Scotland's Highway A83_
+
+The concepts guiding the makeup of the modern web could be considered a happy accident, or at least an implementation of ideas that had general applicability far beyond their initial design criteria.  In the late 1980s we had the hardware and software necessary for networking; low-level tools for transmitting data from one computer to another.  We even had some payload protocols and application layers available including IRC for chat, POP for email, and USENET for general discussions.  We were communicating, albeit over relatively constrained channels.
+
+Out of necessity for his own research, Tim Berners-Lee of the European Organization for Nuclear Research (CERN) concocted a small receipe for publishing documents in a manner that would make his findings more accessible between departments and encourage updates over time.  Called the "WorldWideWeb" (WWW), this project http://cdsweb.cern.ch/record/1405411/files/ARCH-WWW-4-010.pdf[proposed] a series of simple constructs:
+
+* Addressable resources: a unique key or address assigned to each document
+* Hypertext: A unidirectional pointer to an addressable resource
+* Browser: A client program capable of reading hypertext-enabled documents
+
+We take these concepts lightly now, but it's worthwhile considering the paradigm shift this evoked in the early 1990s; in only ten years' time, most of the world's university students and many homes were connected to a web that contained a marketing presense for an overwhelming majority of the Fortune 500.  These ideas ushered innovation and communication at a rate never before seen in the history of mankind.  This was instant, global publishing, and it was free.
+
+Central to the makeup of the WWW was the introduction of the _Uniform Resource Identifier_, or URI.  The URI defined by http://tools.ietf.org/html/rfc3986[RFC 3986] forms the basis of an addressable resource, and has the following makeup:
+
++scheme ":" hierarchical-part ["?" query] ["#" fragment]+
+
+Examples from the RFC include:
+
++foo://example.com:8042/over/there?name=ferret#nose+
+
+and
+
++urn:example:animal:ferret:nose+
+
+In short time, Berners-Lee introduced the first version of the _HyperText Markup Language_ (HTML), aimed at providing a more concise vernacular for incorporating links into a common markup that browsers could format for viewing.  The WWW was built as a mechanism for _document exchange_, sharing of published material over a commonly-understood protocol and payload format (commonly HTML).  
+
+In 2000, University of California at Irvine's Roy Fielding published his dissertation http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm["Architectural Styles and the Design of Network-based Software Architectures"], which expanded the notion of addressing documents to include _services_ among the data exchanged on the web, and defined a system of _REpresentational State Transfer_ (REST).  
+
+By addressing services and applying a set of conventions to these URIs, we're able to compose a wide array of operations upon services with the following key benefits:
+
+* Loose coupling
+* Interoperability
+* Encapsulation
+* Distributed programming
+* Modularization
+
+[NOTE]
+====
+Clearly the study of REST is worthy of its own text, and we'll recommend http://restinpractice.com/book/[_REST in Practice_] by Webber/Parastatidis/Robinson from O'Reilly Media to those looking to explore in greater depth.
+====
+
+REST is certainly not the first distributed architecture; _Remote Procedure Call_ (RPC) varients have been used in various forms (ie. SOAP, XML-RPC) for a long while.  In recent years, the trend towards REST has been largely attributed to its ease-of-use and slim profile when coupled with the _HyperText Transfer Protocol_ (HTTP), an established communication protocol providing for _methods_ , _headers_, and _return status codes_ that map well to the objectives of the caller.  In practice, the success of the WWW is inherently linked to HTTP, though this is only one protocol (scheme) that may be applied to the general guidelines of the web.  Due to its widespread usage and versatility, we'll be employing HTTP throughout this chapter.
+
+Because of its success, REST has become an abused buzzword in some circles.  It's helpful for us to clarify the stages of compliance with a truly RESTful system, and a maturity model developed by http://www.crummy.com/self/[Leonard Richardson] presents four rungs of evolution.  Martin Fowler ably sums these up in his http://martinfowler.com/articles/richardsonMaturityModel.html[blog post], and we'll outline them here.
+
+|====
+|Stage 0|Using HTTP as a transport system for arbitrary payloads; typically used in plain RPC where a caller may wish to invoke upon a server over a network.
+|Stage 1|Addressable Resources; each domain object may be assigned to an address, and client requests contain all the necessary metadata needed to carry out the invocation.
+|Stage 2|HTTP Verbs; in addition to assigning each domain object or service an address, we use the conventions of the HTTP methods to differentiate between a "Create", "Update," "Delete", or other actions.
+|Stage 3|_HATEOAS_, or "Hypermedia As The Engine Of Application State", whereas requests upon a root may return a list of links to the client in order to proceed to the next available actions.  For instance, after "creating a user", the client may be given a success confirmation and shown links to "view the user", "edit the user", "view all users".  This guides the client through the workflow of the application without the client needing to know any of the addresses for these actions ahead of time.
+|====
+
+A RESTful system is always Stage 3, though this is an often-misunderstood and neglected understanding of the REST architecture, particularly for newcomers.
+
+It's important to consider that REST is an _architectural style_, agnostic of any particular programming model or language.  At its core, REST is most simply explained as an API for accessing services and domain objects over the web.
+
+As the Java community has come to understand the REST principles, it has provided a mapping layer between requests and backend services: _JAX-RS_.
+
+=== REST in Enterprise Java: The JAX-RS Specification
+
+The _Java API for RESTful Web Services_, or JAX-RS, is a specification under the direction of the Java Community Process, defined by http://jcp.org/aboutJava/communityprocess/final/jsr339/index.html[JSR-339] in its latest 2.0 version.  From the specification document, its goals are to be/have:
+
+____
+* *POJO-based*: The API will provide a set of annotations and associated classes/interfaces that may be used
+with POJOs in order to expose them as Web resources. The specification will define object lifecycle
+and scope.
+* *HTTP-centric*: The specification will assume HTTP is the underlying network protocol and will pro-
+vide a clear mapping between HTTP and URI elements and the corresponding API classes and
+annotations. The API will provide high level support for common HTTP usage patterns and will be
+sufficiently flexible to support a variety of HTTP applications including WebDAV and the Atom
+Publishing Protocol.
+* *Format independence*: The API will be applicable to a wide variety of HTTP entity body content types. It
+will provide the necessary pluggability to allow additional types to be added by an application in a
+standard manner.
+* *Container independence*: Artifacts using the API will be deployable in a variety of Web-tier containers.
+The specification will define how artifacts are deployed in a Servlet container and as a JAX-WS Provider.
+* *Inclusion in Java EE*: The specification will define the environment for a Web resource class hosted in a
+Java EE container and will specify how to use Java EE features and components within a Web resource
+class.
+____
+
+[NOTE]
+====
+As it's not our aim to provide a comprehensive overview of JAX-RS, we recommend http://shop.oreilly.com/product/9780596158057.do[_RESTful Java with JAX-RS_] by Bill Burke, member of the JSR-339 Expert Group and lead of the JBoss Community's http://www.jboss.org/resteasy[RESTEasy] implementation, from O'Reilly Media.  The second revision of the book, covering the latest 2.0 version of the specification, is now http://shop.oreilly.com/product/0636920028925.do[on sale] for pre-order.
+====
+
+The http://docs.oracle.com/javaee/7/api/javax/ws/rs/package-summary.html[JAX-RS Specification API] provides a set of annotations helpful to developers seeking to map incoming HTTP-based requests to backend services.  From the docs, these include:
+
+|====
+|ApplicationPath|Identifies the application path that serves as the base URI for all resource URIs provided by Path.
+|BeanParam|The annotation that may be used to inject custom JAX-RS "parameter aggregator" value object into a resource class field, property or resource method parameter.
+|ConstrainedTo|Indicates the run-time context in which an annotated JAX-RS provider is applicable.
+|Consumes|Defines the media types that the methods of a resource class or MessageBodyReader can accept.
+|CookieParam|Binds the value of a HTTP cookie to a resource method parameter, resource class field, or resource class bean property.
+|DefaultValue|Defines the default value of request meta-data that is bound using one of the following annotations: PathParam, QueryParam, MatrixParam, CookieParam, FormParam, or HeaderParam.
+|DELETE|Indicates that the annotated method responds to HTTP DELETE requests.
+|Encoded|Disables automatic decoding of parameter values bound using QueryParam, PathParam, FormParam or MatrixParam.
+|FormParam|Binds the value(s) of a form parameter contained within a request entity body to a resource method parameter.
+|GET|Indicates that the annotated method responds to HTTP GET requests.
+|HEAD|Indicates that the annotated method responds to HTTP HEAD requests.
+|HeaderParam|Binds the value(s) of a HTTP header to a resource method parameter, resource class field, or resource class bean property.
+|HttpMethod|Associates the name of a HTTP method with an annotation.
+|MatrixParam|Binds the value(s) of a URI matrix parameter to a resource method parameter, resource class field, or resource class bean property.
+|NameBinding|Meta-annotation used to create name binding annotations for filters and interceptors.
+|OPTIONS|Indicates that the annotated method responds to HTTP OPTIONS requests.
+|Path|Identifies the URI path that a resource class or class method will serve requests for.
+|PathParam|Binds the value of a URI template parameter or a path segment containing the template parameter to a resource method parameter, resource class field, or resource class bean property.
+|POST|Indicates that the annotated method responds to HTTP POST requests.
+|Produces|Defines the media type(s) that the methods of a resource class or MessageBodyWriter can produce.
+|PUT|Indicates that the annotated method responds to HTTP PUT requests.
+|QueryParam|Binds the value(s) of a HTTP query parameter to a resource method parameter, resource class field, or resource class bean property.
+|====
+
+These may be composed together to define the mapping between a business object's methods and the requests it will service, as shown in the API documentation:
+
+[source,java]
+----
+@Path("widgets/{widgetid}")
+@Consumes("application/widgets+xml")
+@Produces("application/widgets+xml")
+public class WidgetResource {
+
+    @GET
+    public String getWidget(@PathParam("widgetid") String id) {
+        return getWidgetAsXml(id);
+    }
+
+    @PUT
+    public void updateWidget(@PathParam("widgetid") String id,Source update) {
+        updateWidgetFromXml(id, update);
+    }
+    ...
+ }
+----
+
+The above defines an example of a business object which will receive requests to +$applicationRoot/widgets/$widgetid+, where +$widgetid+ is the identifier of the domain object to be acted upon.  HTTP +GET+ requests will be serviced by the +getWidget+ method, which will receive the +$widgetid+ as a method parameter; HTTP +PUT+ requests will be handled by the +updateWidget+ method.  The class-level +@Consumes+ and +@Produces+ annotations designate that all business methods of the class will expect and return a media type of "+application/widgets+xml+".
+
+As the specification supplies only a contract by which JAX-RS implementations must behave, the runtime will vary between application server vendors.  For instance the Reference Implementation, http://jersey.java.net/[Jersey], can be found in the http://glassfish.java.net/[GlassFish Application Server], while http://www.wildfly.org/[WildFly] from the JBoss Community uses http://www.jboss.org/resteasy[RESTEasy].
+
+=== Use Case: Provide Access to Interact with Domain State
+
+To this point, we've seen the 
+
+[NOTE]
+====
+*  stored data via reusable API
+
+----
+As a 3. party Integrator I should be able Add/Change/Delete a Conference
+
+As a 3. party Integrator I should be able Add/Change/Delete a Session
+  to Conferences
+
+As a 3. party Integrator I should be able Add/Change/Delete a Attachment
+ to Sessions and Conferences
+
+As a 3. party Integrator I should be able Add/Change/Delete a Venue
+  (and attch to Conference and Session)
+----
+
+*DAP (Domain Application Protocol)*
+
+** /
+*** GET -> Links
+*** Link -> /conference
+*** Link -> /Venue
+** /conference
+*** GET -> List
+*** POST -> Add
+** /conference/[c_id] application/vnd.ced+xml;type=conference
+*** GET -> Single
+*** PUT -> Update
+*** DELETE -> Remove
+*** Link -> /venue/[v_id] 
+*** Link -> /attachment/[a_id]
+** /conference/[c_id]/session application/vnd.ced+xml;type=session
+*** GET -> List
+*** POST -> Add
+** /conference/[c_id]/session/[s_id]
+*** GET -> Single
+*** PUT -> Update
+*** DELETE -> Remove
+*** Link -> /venue/[v_id]/room/[r_id] application/vnd.ced+xml;type=session
+*** Link -> /attachment/[a_id]
+** /venue application/vnd.ced+xml;type=venue
+*** GET -> List
+*** POST -> Add
+** /venue/[v_id]/room application/vnd.ced+xml;type=room
+*** GET -> List
+*** POST -> Add
+*** Link ->/attachment/[a_id]
+** /venue/[v_id]/room/[r_id]
+*** GET -> Single
+*** PUT -> Update
+*** DELETE -> Remove
+*** Link ->/attachment/[a_id]
+** /attachment application/vnd.ced+xml;type=attachment
+*** GET -> List ?
+*** POST -> Add
+** /attachment/[a_id]
+*** GET -> List
+*** POST -> Add
+====
+
+=== Implementation
+
+Start Explaining the impl for GeekSeek and the mechanisms used
+
+[NOTE]
+====
+* CDI Request Scoped Bean Delegating to Repository EJB
+** JPA Model != REST Model
+** _Dynamically_ append/discover Links/Resources based on modules included in deployment
+====
+
+[NOTE]
+====
+1. Explanation of the utility of RepositoryResource
+
+* Base implementation to expose CRUD operations for a Resource based on a Repository<T>
+** POST /x/
+** GET, PUT, DELETE  /x/\{id\}
+* Converts between REST Representation and Domain object via RepresentationConverter's
+** RepresentationConverter is responsible for mapping the fields
+* Handles
+** NotFound(404)
+** Created(201) with Hedader: Location On
+** NoContent(204) On DELETE or successfull update
+** BadRequest(400) On PUT on a missing resource
+** Header: Last-Modified
+** Header: Content-Type
+====
+
++org.cedj.geekseek.web.rest.core.RepositoryResource+
+[source,java]
+----
+public abstract class RepositoryResource<DOMAIN extends Identifiable&Timestampable, REP extends Representation<DOMAIN>>
+    implements Resource {
+
+    protected static final String BASE_XML_MEDIA_TYPE = "application/vnd.ced+xml";
+    protected static final String BASE_JSON_MEDIA_TYPE = "application/vnd.ced+json";
+
+    private Class<? extends Resource> resourceClass;
+    private Class<DOMAIN> domainClass;
+    private Class<REP> representationClass;
+
+    @Context
+    private UriInfo uriInfo;
+
+    @Context
+    private HttpHeaders headers;
+
+    @Inject
+    private Repository<DOMAIN> repository;
+
+    @Inject
+    private RepresentationConverter<REP, DOMAIN> converter;
+
+    // for CDI proxyabillity
+    protected RepositoryResource() {}
+
+    public RepositoryResource(Class<? extends Resource> resourceClass, Class<DOMAIN> domainClass, Class<REP> representationClass) {
+        this.resourceClass = resourceClass;
+        this.domainClass = domainClass;
+        this.representationClass = representationClass;
+    }
+
+    @Override
+    public Class<? extends Resource> getResourceClass() {
+        return resourceClass;
+    }
+
+    public Class<DOMAIN> getDomainClass() {
+        return domainClass;
+    }
+
+    public Class<REP> getRepresentationClass() {
+        return representationClass;
+    }
+
+    protected Repository<DOMAIN> getRepository() {
+        return repository;
+    }
+
+    protected RepresentationConverter<REP, DOMAIN> getConverter() {
+        return converter;
+    }
+
+    protected UriInfo getUriInfo() {
+        return uriInfo;
+    }
+
+    @POST
+    @Consumes({ BASE_JSON_MEDIA_TYPE, BASE_XML_MEDIA_TYPE })
+    public Response create(REP representtion) {
+        DOMAIN entity = getConverter().to(uriInfo, representtion);
+
+        getRepository().store(entity);
+        return Response.created(
+            UriBuilder.fromResource(getResourceClass()).segment("{id}").build(entity.getId())).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public Response delete(@PathParam("id") String id) {
+        DOMAIN entity = getRepository().get(id);
+        if (entity == null) {
+            return Response.status(Status.NOT_FOUND).build();
+        }
+        getRepository().remove(entity);
+        return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/{id}")
+    @Produces({ BASE_JSON_MEDIA_TYPE, BASE_XML_MEDIA_TYPE })
+    public Response get(@PathParam("id") String id) {
+        DOMAIN entity = getRepository().get(id);
+        if (entity == null) {
+            return Response.status(Status.NOT_FOUND).type(getMediaType()).build();
+        }
+
+        return Response.ok(getConverter().from(uriInfo, entity))
+            .type(getMediaType())
+            .lastModified(entity.getLastModified())
+            .build();
+    }
+
+    @PUT
+    @Path("/{id}")
+    @Consumes({ BASE_JSON_MEDIA_TYPE, BASE_XML_MEDIA_TYPE })
+    public Response update(@PathParam("id") String id, REP representation) {
+        DOMAIN entity = getRepository().get(id);
+        if (entity == null) {
+            return Response.status(Status.BAD_REQUEST).build(); // TODO: Need Business Exception type to explain why?
+        }
+
+        getConverter().update(uriInfo, representation, entity);
+        getRepository().store(entity);
+
+        return Response.noContent().build();
+    }
+
+    // Internal Helpers
+
+    protected abstract String[] getMediaTypes();
+
+    // Work around for faulty @Produces alg when using type arguments
+    private String getMediaType() {
+        return matchMediaType(getMediaTypes()[0], getMediaTypes()[1]);
+    }
+
+    protected String matchMediaType(String defaultMediaType, String alternativeMediaType) {
+        String selected = defaultMediaType;
+        for (MediaType mt : headers.getAcceptableMediaTypes()) {
+            if (mt.isCompatible(MediaType.valueOf(alternativeMediaType))) {
+                selected = alternativeMediaType;
+                break;
+            }
+        }
+        return selected;
+    }
+}
+----
+
+Concrete implementation:
+
++org.cedj.geekseek.web.rest.user.UserResource+
+[source,java]
+----
+@ResourceModel
+@Path("/user")
+public class UserResource extends RepositoryResource<User, UserRepresentation> {
+
+    private static final String USER_XML_MEDIA_TYPE = BASE_XML_MEDIA_TYPE + "; type=user";
+    private static final String USER_JSON_MEDIA_TYPE = BASE_JSON_MEDIA_TYPE + "; type=user";
+
+    public UserResource() {
+        super(UserResource.class, User.class, UserRepresentation.class);
+    }
+
+    @Override
+    public String getResourceMediaType() {
+        return USER_XML_MEDIA_TYPE;
+    }
+
+    @Override
+    protected String[] getMediaTypes() {
+        return new String[]{USER_XML_MEDIA_TYPE, USER_JSON_MEDIA_TYPE};
+    }
+}
+----
+
++org.cedj.geekseek.web.rest.core.RepresentationConverter+
+[source,java]
+----
+public interface RepresentationConverter<REST, SOURCE> {
+
+    Class<REST> getRepresentationClass();
+
+    Class<SOURCE> getSourceClass();
+
+    REST from(UriInfo uriInfo, SOURCE source);
+
+    Collection<REST> from(UriInfo uriInfo, Collection<SOURCE> sources);
+
+    SOURCE to(UriInfo uriInfo, REST representation);
+
+    SOURCE update(UriInfo uriInfo, REST representation, SOURCE target);
+
+    Collection<SOURCE> to(UriInfo uriInfo, Collection<REST> representations);
+
+
+    public abstract static class Base<REST, SOURCE> implements RepresentationConverter<REST, SOURCE> {
+
+        private Class<REST> representationClass;
+        private Class<SOURCE> sourceClass;
+
+        protected Base() {}
+
+        public Base(Class<REST> representationClass, Class<SOURCE> sourceClass) {
+            this.representationClass = representationClass;
+            this.sourceClass = sourceClass;
+        }
+
+        @Override
+        public Class<REST> getRepresentationClass() {
+            return representationClass;
+        }
+
+        @Override
+        public Class<SOURCE> getSourceClass() {
+            return sourceClass;
+        }
+
+        @Override
+        public Collection<REST> from(UriInfo uriInfo, Collection<SOURCE> ins) {
+            Collection<REST> out = new ArrayList<REST>();
+            for(SOURCE in : ins) {
+                out.add(from(uriInfo, in));
+            }
+            return out;
+        }
+
+        @Override
+        public Collection<SOURCE> to(UriInfo uriInfo, Collection<REST> ins) {
+            Collection<SOURCE> out = new ArrayList<SOURCE>();
+            for(REST in : ins) {
+                out.add(to(uriInfo, in));
+            }
+            return out;
+        }
+    }
+}
+----
+
+[NOTE]
+====
+1. And custom @ResourceModel
+
+* JAX-RS 1 missing Interceptors
+** Used to implement common features, Security, Cross Resource Links, Validation
+* Implemented as CDI StereoType
+* With anything that has this annotation, will apply the common features 
+** RequestScoped, Interceptors
+====
+
++org.cedj.geekseek.web.rest.core.annotation.ResourceModel+
+[source,java]
+----
+@Secured
+@Linked
+@Validated
+@RequestScoped
+@Stereotype
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface ResourceModel {
+
+}
+----
+
+[NOTE]
+====
+1. Explanation of LinkableRepresenatation
+
+* Sonme Representation Objects are Linkable
+* Via the @ResourceModel @Linked interceptor a LinkProvider can link a given Resource to some other Resource
+* A way to link Resources that are not described in the Domain Model it self
+** Conference->Session is in the Conference Domain (conference has sessions)
+** Conference->Trackers(User) is linking two Domain models, Conference and User via the Relation domain
+** Domain Model links are handled directly by the Representation/RepresentationConverter
+** Non Domain Model links are handled via the LinkedIntercetptor and the LinkedRepresentation
+====
+
++org.cedj.geekseek.web.rest.core.Representation+
+[source,java]
+----
+public interface Representation<X> {
+
+    Class<X> getSourceType();
+
+    String getRepresentationType();
+}
+----
+
++org.cedj.geekseek.web.rest.core.LinkableRepresentation+
+[source,java]
+----
+public abstract class LinkableRepresenatation<X> implements Representation<X> {
+
+    private List<ResourceLink> links;
+    private Class<X> sourceType;
+    private String representationType;
+    private UriInfo uriInfo;
+
+    protected LinkableRepresenatation() {}
+
+    public LinkableRepresenatation(Class<X> sourceType, String representationType, UriInfo uriInfo) {
+        this.sourceType = sourceType;
+        this.representationType = representationType;
+        this.uriInfo = uriInfo;
+    }
+
+    @XmlElement(name = "link", namespace = "urn:ced:link")
+    public List<ResourceLink> getLinks() {
+        if (this.links == null) {
+            this.links = new ArrayList<ResourceLink>();
+        }
+        return links;
+    }
+
+    public void addLink(ResourceLink link) {
+        getLinks().add(link);
+    }
+
+    public boolean doesNotContainRel(String rel) {
+        return !containRel(rel);
+    }
+
+    public boolean containRel(String rel) {
+        if(links == null || links.size() == 0) {
+            return false;
+        }
+        for(ResourceLink link : links) {
+            if(rel.equals(link.getRel())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override @XmlTransient
+    public Class<X> getSourceType() {
+        return sourceType;
+    }
+
+    @Override @XmlTransient
+    public String getRepresentationType() {
+        return representationType;
+    }
+
+    @XmlTransient
+    public UriInfo getUriInfo() {
+        return uriInfo;
+    }
+}
+----
+
+logic used by +LinkInterceptor+:
+
++org.cedj.geekseek.web.rest.core.interceptor.LinkedInterceptor+
+[source,java]
+----
+@Linked
+@Interceptor
+public class LinkedInterceptor {
+
+    @Inject
+    private Instance<LinkProvider> linkProviers;
+
+    @AroundInvoke
+    public Object link(InvocationContext ic) throws Exception {
+        Object obj = ic.proceed();
+        if(hasLinkableRepresentations(obj)) {
+            linkAllRepresentations(obj);
+        }
+        return obj;
+    }
+
+    private boolean hasLinkableRepresentations(Object obj) {
+        return locateLinkableRepresenatation(obj) != null;
+    }
+
+    private LinkableRepresenatation<?> locateLinkableRepresenatation(Object obj) {
+        if(obj instanceof Response) {
+            Object entity = ((Response)obj).getEntity();
+            if(entity instanceof LinkableRepresenatation) {
+                return (LinkableRepresenatation<?>)entity;
+            }
+        }
+        return null;
+    }
+
+    private void linkAllRepresentations(Object obj) {
+        LinkableRepresenatation<?> linkable = locateLinkableRepresenatation(obj);
+        for(LinkProvider linker : linkProviers) {
+            linker.appendLinks(linkable);
+        }
+    }
+}
+----
+
++LinkedInterceptor+ is applied to anything with the +Linked+ annotation:
+
++org.cedj.geekseek.web.rest.core.annotation.Linked+
+[source,java]
+----
+@InterceptorBinding
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Linked {
+
+}
+----
+
+For instance used by +ResourceModel+.
+
+[NOTE]
+====
+1. Explanation of ResourceLink
+
+* Representation of a link in the model
+* Holds mediatype, href, rel
+====
+
++org.cedj.geekseek.web.rest.core.ResourceLink+
+[source,java]
+----
+public class ResourceLink {
+
+    private String rel;
+    private URI href;
+    private String type;
+
+    // JAXB Serialization only
+    @SuppressWarnings("unused")
+    private ResourceLink() {
+    }
+
+    // TODO: Remove. Make sure we can map types for internal linking within the same resource
+    public ResourceLink(String rel, URI href) {
+        this.rel = rel;
+        this.href = href;
+    }
+
+    public ResourceLink(String rel, URI href, String media) {
+        this.rel = rel;
+        this.href = href;
+        this.type = media;
+    }
+
+    @XmlAttribute
+    public String getHref() {
+        if (href == null) {
+            return null;
+        }
+        return href.toASCIIString();
+    }
+
+    @XmlAttribute
+    public String getRel() {
+        return rel;
+    }
+
+    @XmlAttribute
+    public String getMediaType() {
+        return type;
+    }
+
+    public void setHref(String href) {
+        this.href = URI.create(href);
+    }
+
+    public void setRel(String rel) {
+        this.rel = rel;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+}
+----
+
+[NOTE]
+====
+1. Create issue to explain EventRepositoryDecorator, and where that should be done
+
+* https://github.com/arquillian/continuous-enterprise-development/issues/69
+
+* CDI Decorator that decorates all Repository<T> instances to add eventing
+** Created / Removed
+* Used by Services to hook into the lifecycles of objects created
+** MailService.x(@Observes @Created User) { sendMail() }
+** Services can choose to Observe During or After transcation commit
+====
+
+
+[NOTE]
+====
+1. Explain Graph.js and geekseek.js and who is calling it and how
+
+* (The rest of that bit can be saved for UI chapter)
+
+* AngularJS is used for the FrontEnd
+** geekseek.js is the AngularJS Module / Controller description
+** graph.js is a Node structure for doing resource calls
+* Normal flow would be:
+** Initiate(OPTIONS) and GET the root resource /api/
+** Initiate links provided by the root
+** Based on the initiation we know what we can do with the different 'top level/root' resources
+** e.g. POST(create) a Conference
+** Map the current link.rel to a angular html template
+*** e.g. conference.html
+** Each template has two states; Form and Display
+*** Display is a html view representation of the Resource
+*** Form is the html create/edit representation of the Resource
+
+====
+
+[NOTE]
+====
+1. Explain RepresentationConverter and its role
+
+* The underlying Domain Model / JPA model is not the same as the REST model
+** While EE allow you to annotated JPA models with JAX-B bindings etc, you would want to split the two models
+* REST model might;
+** contain less data
+** combine JPA models into one
+** link resources
+** render it self in multiple different representations and formats
+* Some Resources act as Proxy resources and has no representation on their own
+** To allow these Resources to operate in a modular fashion we need a way to describe
+*** convert(FROM, TO)
+*** e.g. the Relation Resoruce. Links Users to a Conference. The Relation it self knows nothing about the Source/Target, but it knows how to get a T and a Converter that supports converting T to some Representation of T
+====
+
++org.cedj.geekseek.web.rest.core.RepresentationConverter+
+[source,java]
+----
+public interface RepresentationConverter<REST, SOURCE> {
+
+    Class<REST> getRepresentationClass();
+
+    Class<SOURCE> getSourceClass();
+
+    REST from(UriInfo uriInfo, SOURCE source);
+
+    Collection<REST> from(UriInfo uriInfo, Collection<SOURCE> sources);
+
+    SOURCE to(UriInfo uriInfo, REST representation);
+
+    SOURCE update(UriInfo uriInfo, REST representation, SOURCE target);
+
+    Collection<SOURCE> to(UriInfo uriInfo, Collection<REST> representations);
+
+
+    public abstract static class Base<REST, SOURCE> implements RepresentationConverter<REST, SOURCE> {
+
+        private Class<REST> representationClass;
+        private Class<SOURCE> sourceClass;
+
+        protected Base() {}
+
+        public Base(Class<REST> representationClass, Class<SOURCE> sourceClass) {
+            this.representationClass = representationClass;
+            this.sourceClass = sourceClass;
+        }
+
+        @Override
+        public Class<REST> getRepresentationClass() {
+            return representationClass;
+        }
+
+        @Override
+        public Class<SOURCE> getSourceClass() {
+            return sourceClass;
+        }
+
+        @Override
+        public Collection<REST> from(UriInfo uriInfo, Collection<SOURCE> ins) {
+            Collection<REST> out = new ArrayList<REST>();
+            for(SOURCE in : ins) {
+                out.add(from(uriInfo, in));
+            }
+            return out;
+        }
+
+        @Override
+        public Collection<SOURCE> to(UriInfo uriInfo, Collection<REST> ins) {
+            Collection<SOURCE> out = new ArrayList<SOURCE>();
+            for(REST in : ins) {
+                out.add(to(uriInfo, in));
+            }
+            return out;
+        }
+    }
+}
+----
+
+[NOTE]
+====
+1. Explain JSON request > Representation classes via Jackson (runtime) or JAXB as called by JAX-RS
+
+* Maps HTTP Request to a JAX-RS Resource method
+** MediaType and @Path
+* MessageBodyReader and MessageBodyWriter SPI's are used to marshal and unmarshal the body of the request / response
+** Any impl of MBR/MBW annotated with @Provider will get picked up by the Runtime
+*** Can be filtered more specifically by uing @Consumes/@Produces MediaType expressions
+*** Note: User provided @Providers compete with the built in Providers provided by the app server
+**** The most specific Prodiver wins
+====
+
+=== Requirement Test Scenarios
+
+Overview.
+
+[NOTE]
+====
+* PUT data
+* GET data
+* POST data
+* Link data
+====
+
+==== Setup
+
+[NOTE]
+====
+* Arquillian Warp + REST extension
+** CED/pom.xml dependencyManagement arquillian-warp, arquillian-wrp-rest
+** CED/CEW/CER/pom.xml dependency warp-bom, warp-rest
+
+* ConferenceResource and SessionResource REST services build on the common RepoisitoryResource service.
+** Rely on CDI @Inject of Repository<? extends Identifiable> to avoid binding the Service to the concrete JPA Repository Backend. 
+** Allow us to swtich the impls around when we test
+====
+
+==== Domain Conference/ Session Story
+
+[NOTE]
+====
+* Use of @InSequence to sequentially execute @Test methods
+* Follows the normal REST client execution flow from A-B
+** GET Root resource 
+** Locate conference link
+** POST to create a new Conference
+** GET to read the created Conference
+** Locate session link
+** POST to create a new Session
+** GET to read the created Session
+** PUT to update the Session
+** DELETE to delete the Session
+** PUT to update the Conference
+** DELETE to delete the Conference
+
+* Pure client side test
+* Requires deployed 'something' that talks the REST APIs.
+* CreateConferenceAndSessionStory defines the Scenario, but not the deployment
+====
+
+Test use case:
+
++org.cedj.geekseek.web.rest.conference.test.integration.story.CreateConferenceAndSessionStory+
+
+[source,java]
+----
+@RunWith(Arquillian.class)
+public class CreateConferenceAndSessionStory {
+
+    private static String uri_conference = null;
+    private static String uri_conferenceInstance = null;
+    private static String uri_session = null;
+    private static String uri_sessionInstance = null;
+
+    @ArquillianResource
+    private URL base;
+
+    @BeforeClass
+    public static void setup() {
+        RestAssured.filters(
+                ResponseLoggingFilter.responseLogger(),
+                new RequestLoggingFilter());
+    }
+----
+
+Explain the above.  Then get to the tests here:
+
+[source,java]
+----
+// Story: As a 3rd party Integrator I should be able locate the Conference root Resource
+@Test @InSequence(0)
+public void shouldBeAbleToLocateConferenceRoot() throws Exception {
+        //uri_conference = new URL(base, "api/conference").toExternalForm();
+        uri_conference =
+              given().
+              then().
+                  contentType(BASE_MEDIA_TYPE).
+                  statusCode(Status.OK.getStatusCode()).
+                  root("root").
+                      body("link.find {it.@rel == 'conference'}.size()", equalTo(1)).
+              when().
+                  get(new URL(base, "api/").toExternalForm()).
+              body().
+                  path("root.link.find {it.@rel == 'conference'}.@href");
+    }
+----
+
+Explain the test above.  Then show how we order the next methods afterwards by use of +@InSequence+:
+
+[source,java]
+// Story: As a 3rd party Integrator I should be able create a Conference
+@Test @InSequence(1)
+public void shouldBeAbleToCreateConference() throws Exception { .. }
+...
+----
+
+[NOTE]
+====
+* The TestClass defines the whole 'scenario' and not the Test Method.
+
+* CreateConferenceAndSessionStoryTestCase extends CreateConferenceAndSessionStory defines the 'module level' @Deployment and is ran as part of the test phase in the rest-conference module.
+
+[source,java]
+----
+    @Deployment(testable = false)
+    public static WebArchive deploy() {
+        return ConferenceRestDeployments.conference()
+                .addAsWebInfResource(new File("src/main/resources/META-INF/beans.xml"));
+    }
+----
+
+** Creates a deployment with TestDouble/Fakes for the Repository / JPA layer.
+
+*** TestConferenceRepository and SessionConferenceRepository simulate the JPA layer for Testing. 
+
+[source,java]
+----
+@ApplicationScoped
+public abstract class TestRepository<T extends Identifiable> implements Repository<T> { .. }
+
+public class TestConferenceRepository extends TestRepository<Conference> { .. }
+
+@ApplicationScoped
+public class TestSessionRepository implements Repository<Session> { .. }
+----
+
+* Splitting the Test Scenario code and Deployment code allow for reuse of the Scenario code
+** CreateConferenceAndSessionStory is reused and executed against the final deployment as well
+***  See "Assembly and Deployment" chapter
+* the Story Test tests the crud, flow and linking of resources
+
+* Uses RESTAssured library for fluent REST Client test calls
+
+[source, java]
+----
+import static com.jayway.restassured.RestAssured.given;
+
+uri_conferenceInstance =
+      given().
+          contentType(CONFERENCE_MEDIA_TYPE).
+          body(conf).
+      then().
+          statusCode(Status.CREATED.getStatusCode()).
+      when().
+          post(uri_conference).
+      header("Location");
+
+
+uri_session =
+      given().
+      then().
+          contentType(CONFERENCE_MEDIA_TYPE).
+          statusCode(Status.OK.getStatusCode()).
+          root("conference").
+              body("link.find {it.@rel == 'bookmark'}.size()", equalTo(1)).
+              body("link.find {it.@rel == 'self'}.size()", equalTo(1)).
+      when().
+          get(uri_conferenceInstance).
+      body().
+          path("conference.link.find {it.@rel == 'session'}.@href");
+----
+
+* Does not share REST Representation objects with server side.
+** Client != Server
+** Test should verify a behavior. Sharing of Objects might be easier to code/update, but could also sneak in unexpected client changes which should have been caught by the tests.
+====
+  
+=== Domain Conference Details
+
+[NOTE]
+====
+* ConferenceResourceTestCase tests details of the REST service behavior. 
+* Uses Arquillian Warp to allow easy control over permutations of data
+** Reuses same Test Double/ Fakes Repositories
+
+* Can create Conference domain objects on Client side and transfere them to container side
+** Controls which data to fetch trough the REST layer
+** No need to setup backend data store with all permutations
+
+[source,java]
+----
+final Conference conference = new Conference()
+    .setName("Name")
+    .setTagLine("TagName")
+    .setDuration(new Duration(new Date(), new Date()));
+
+Warp.initiate(new Activity() {
+    @Override
+    public void perform() {
+        given().
+        then().
+            contentType(CONFERENCE_MEDIA_TYPE).
+            root("conference").
+                body("name", equalTo(conference.getName())).
+                body("tagLine", equalTo(conference.getTagLine())).
+                body("start", equalToXmlDate(conference.getDuration().getStart())).
+                body("end", equalToXmlDate(conference.getDuration().getEnd())).
+        when().
+            get(baseURL + "api/conference/{id}", conference.getId()).
+        body();
+    }
+}).inspect(new SetupConference(conference));
+----
+
+* @BeforeServlet called in-container before REST service is hit
+* We can produce the data we want the REST layer to receive
+
+[source,java]
+----
+public static class SetupConference extends Inspection {
+    private static final long serialVersionUID = 1L;
+
+    private Conference conference;
+
+    public SetupConference(Conference conference) {
+        this.conference = conference;
+    }
+
+    @BeforeServlet
+    public void store(Repository<Conference> repository) {
+        repository.store(conference);
+    }
+}
+----
+
+
+
+*Domain User*
+
+* Not explained, only code
+* See Conference
+
+*Domain Venue*
+
+* Not explained, only code.
+* See Conference
+====
