@@ -141,68 +141,65 @@ As the specification supplies only a contract by which JAX-RS implementations mu
 
 === Use Case: Provide Access to Interact with Domain State
 
-To this point, we've seen the 
+Thus far, we've visited and described the internal mechanisms with which we interact with data.  Now we're able to work on building an API for clients to access the domain state in a self-describing fashion, and RESTful design coupled with JAX-RS affords us the tools to expose our application's capabilities in a commonly-understood way.
 
-[NOTE]
-====
-*  stored data via reusable API
+We'd like to encourage 3rd-party integrators - clients about whom we may not have any up-front knowledge - to view, update, and create domain objects within the GeekSeek application.  Therefore, our use case requirements will be simply summed up as:
 
-----
-As a 3. party Integrator I should be able Add/Change/Delete a Conference
+____
+* As a 3rd-party integrator, I should be able to perform CRUD operations upon:
+** A Conference
+** Sessions within Conferences
+** Attachments within Sessions
+** Attachments within Conferences
+** A Venue (and associate with a Conference and/or Session)
+____
 
-As a 3. party Integrator I should be able Add/Change/Delete a Session
-  to Conferences
+Additionally, we want to lay out a map of the application as the client navigates through state changes.  For instance, at the root, a client should know what operations it's capable of performing.  Once that operation is complete, a series of possible next steps should be made available to the client such that it may continue execution.  This guide is known as the _Domain Application Protocol_ (DAP), and it acts as a slimming agent atop the wide array of possible HTTP operations in order to show the valid business processes that are available to a client as it progresses through the application's various state changes.  It's this DAP layer which grants us the final HATEOAS step of the Richardson Maturity Model.  Our DAP will define a series of addressable resources coupled with valid HTTP methods and media types to determine what actions are taken, and what links are to come next in the business process.
 
-As a 3. party Integrator I should be able Add/Change/Delete a Attachment
- to Sessions and Conferences
+____
+** +/+
+*** +GET+ -> Links
+*** Link -> +/conference+
+*** Link -> +/venue+
+** +/conference+
+*** +GET+ -> List
+*** +POST+ -> Add
+** +/conference/[c_id] application/vnd.ced+xml;type=conference+
+*** +GET+ -> Single
+*** +PUT+ -> Update
+*** +DELETE+ -> Remove
+*** Link -> +/venue/[v_id]+
+*** Link -> +/attachment/[a_id]+
+** +/conference/[c_id]/session application/vnd.ced+xml;type=session+
+*** +GET+ -> List
+*** +POST+ -> Add
+** +/conference/[c_id]/session/[s_id]+
+*** +GET+ -> Single
+*** +PUT+ -> Update
+*** +DELETE+ -> Remove
+*** Link -> +/venue/[v_id]/room/[r_id] application/vnd.ced+xml;type=session+
+*** Link -> +/attachment/[a_id]+
+** +/venue application/vnd.ced+xml;type=venue+
+*** +GET+ -> List
+*** +POST+ -> Add
+** +/venue/[v_id]/room application/vnd.ced+xml;type=room+
+*** +GET+ -> List
+*** +POST+ -> Add
+*** Link -> +/attachment/[a_id]+
+** +/venue/[v_id]/room/[r_id]+
+*** +GET+ -> Single
+*** +PUT+ -> Update
+*** +DELETE+ -> Remove
+*** Link -> +/attachment/[a_id]+
+** +/attachment application/vnd.ced+xml;type=attachment+
+*** +GET+ -> List 
+*** +POST+ -> Add
+** +/attachment/[a_id]+
+*** +GET+ -> List
+*** +POST+ -> Add
+____
 
-As a 3. party Integrator I should be able Add/Change/Delete a Venue
-  (and attch to Conference and Session)
-----
-
-*DAP (Domain Application Protocol)*
-
-** /
-*** GET -> Links
-*** Link -> /conference
-*** Link -> /Venue
-** /conference
-*** GET -> List
-*** POST -> Add
-** /conference/[c_id] application/vnd.ced+xml;type=conference
-*** GET -> Single
-*** PUT -> Update
-*** DELETE -> Remove
-*** Link -> /venue/[v_id] 
-*** Link -> /attachment/[a_id]
-** /conference/[c_id]/session application/vnd.ced+xml;type=session
-*** GET -> List
-*** POST -> Add
-** /conference/[c_id]/session/[s_id]
-*** GET -> Single
-*** PUT -> Update
-*** DELETE -> Remove
-*** Link -> /venue/[v_id]/room/[r_id] application/vnd.ced+xml;type=session
-*** Link -> /attachment/[a_id]
-** /venue application/vnd.ced+xml;type=venue
-*** GET -> List
-*** POST -> Add
-** /venue/[v_id]/room application/vnd.ced+xml;type=room
-*** GET -> List
-*** POST -> Add
-*** Link ->/attachment/[a_id]
-** /venue/[v_id]/room/[r_id]
-*** GET -> Single
-*** PUT -> Update
-*** DELETE -> Remove
-*** Link ->/attachment/[a_id]
-** /attachment application/vnd.ced+xml;type=attachment
-*** GET -> List ?
-*** POST -> Add
-** /attachment/[a_id]
-*** GET -> List
-*** POST -> Add
-====
+The DAP above can be conceptually understood as a site map for services, and it defines the API for users of the system.  By designing to the DAP, we provide clients with a robust mechanism by which the details of attaining each resource or invoking the application's services can be read as the client navigates from state to state.
 
 === Implementation
 
